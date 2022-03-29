@@ -68,17 +68,21 @@ def input_check(prompt, sec=False, responses=None, letter=False):
                 return input_check(f"\nWhat letter do you want to replace {alphaold[0]} with? ",
                                    sec=True, letter=True)
             og = False  # Will track if the letter for replacing is from the original cryptogram
+            substituted = [False, '']
             for i in range(len(cryptogram)):
                 if string == cryptogram[i][0]:  # Match is found
                     if cryptogram[i][1] is True:  # The letter for replacing is already substituted
-                        print(f"{string} is already substituted. Please undo '{string}' to '{data[1][i]}' "
-                              "or substitute a different letter.")  # Tells the user how to undo the substituted letter
-                        return input_check(f"\nWhat letter do you want to replace {alphaold[0]} with? ",
-                                           sec=True, letter=True)
+                        substituted = [True, i]
                 # Matches with the letter to be replaced, to determine if the replacing letter is an original letter
                 elif alphaold == cryptogram[i]:
                     if data[1][i] == string:  # If the original letter equals the letter for replacing
                         og = True
+            # The letter for replacing is substituted and it's not meant to be an original
+            if og is False and substituted[0] is True:
+                print(f"{string} is already substituted. Please undo '{string}' to '{data[1][substituted[1]]}' "
+                      "or substitute a different letter.")  # Tells the user how to undo the substituted letter
+                return input_check(f"\nWhat letter do you want to replace {alphaold[0]} with? ",
+                                   sec=True, letter=True)
             return [string, og]
 
     else:  # Regular input checker
@@ -101,7 +105,7 @@ def creation():
     print()
     res = ""  # Will store cryptogram
     for i in range(lines):
-        line = input(f"Line {i + 1}: ").rstrip()
+        line = input(f"Line {i + 1}: ").rstrip().upper()
         if i + 1 == lines:  # Don't add a newline to the last line
             res += line
         else:
@@ -136,7 +140,7 @@ def setup(dir):
         data.append(data[0])  # Makes a copy of the unchanged data for later use
     else:  # The program has been run before
         # Prompts the user if they'd like to continue where they left off or start over
-        if input_check("\nWould you like to continue where you left off or start over? [Left off/Start over] ",
+        if input_check("\nWould you like to continue where you left off or start over? [left off/start over] ",
                        responses=["left off", "start over"]) == 'start over':
 
             # They can clear the current cryptogram, or make a new one
@@ -185,7 +189,15 @@ while True:
     # Gives the user the option to end the program
     done = input_check("\nAre you done?(Y/N)", responses=["yes", "no", 'y', 'n'])
     if 'y' in done:
-        print("\nCool :-)")
+        completed = True
+        for i in range(len(cryptogram)):
+            if cryptogram[i][0].isalpha() is True:
+                if cryptogram[i][1] is False:
+                    completed = False
+        if completed is True:
+            print(colored("Congrats on finishing!!", "green"))
+        else:
+            print("\nSee you next time :-)")
         break
 
 with open(dir, 'w') as file:
