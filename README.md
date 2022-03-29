@@ -1,2 +1,2 @@
 # Cryptogram
-A program for visualizing and solving cryptograms
+A simple program for visualizing and solving cryptograms
