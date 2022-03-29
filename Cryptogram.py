@@ -1,6 +1,5 @@
 import os
 import colorama
-import termcolor
 from termcolor import colored
 
 
@@ -56,7 +55,7 @@ def input_check(prompt, sec=False, responses=None, letter=False):
                 # Asks the user if they want to change the changed or unchanged string
                 return [string,
                         input_check(f"\nWould you like to replace the changed {string} or the unchanged "
-                                    f"{string}? [changed/unchanged]", responses=["changed", "unchanged"])
+                                    f"{string}? [changed/unchanged] ", responses=["changed", "unchanged"])
                         == 'changed']
             # The letter is only present in changed form, so no user input is required
             elif difference[0] is True:
@@ -146,11 +145,11 @@ def setup(dir):
                        responses=["left off", "start over"]) == 'start over':
 
             # They can clear the current cryptogram, or make a new one
-            action = input_check("\nWould you like to work on a new cryptogram or clear your current one? [New/Clear]",
+            action = input_check("\nWould you like to work on a new cryptogram or clear your current one? [new/clear] ",
                                  responses=["new", "clear"])
 
             # Extra confirmation check
-            if 'y' in input_check("\nAre you sure? Your progress will be deleted and this can't be undone. [Y/N]",
+            if 'y' in input_check("\nAre you sure? Your progress will be deleted and this can't be undone.[Y/N] ",
                                   responses=["yes", "no", 'y', 'n']):
                 # If the user would like to start over, delete the save file and call setup
                 if action == "new":
@@ -183,14 +182,14 @@ while True:
     # Replaces letters, notating if old one is the changed version or not and if the new one is an original
     replacer(alphaold[0], alphanew[0], changed=alphaold[1], red=not alphanew[1])
     # Gives the user an option to undo their change
-    undo = input_check("\nDo you want to undo?(Y/N)", responses=["yes", "no", 'y', 'n'])
+    undo = input_check("\nDo you want to undo?[Y/N] ", responses=["yes", "no", 'y', 'n'])
     if 'y' in undo:
         # Reverses the first replacement, retaining if the original letter was changed
         # and noting that, unless the new letter is an original, it must be changed
         replacer(alphanew[0], alphaold[0], changed=not alphanew[1], red=alphaold[1])
 
     # Gives the user the option to end the program
-    done = input_check("\nAre you done?(Y/N)", responses=["yes", "no", 'y', 'n'])
+    done = input_check("\nAre you done?[Y/N] ", responses=["yes", "no", 'y', 'n'])
     if 'y' in done:
         completed = True
         for i in range(len(cryptogram)):
