@@ -1,4 +1,6 @@
 import os
+import colorama
+import termcolor
 from termcolor import colored
 
 
@@ -160,6 +162,7 @@ def setup(dir):
     return data
 
 
+colorama.init()
 dir = os.path.dirname(os.path.realpath(__file__)) + "\input.txt"  # Path to save file
 data = setup(dir)  # Sets up program
 cryptogram = []  # Will store the user changed cryptogram
