@@ -29,12 +29,15 @@ def printing(curr):
 
 
 # Used to check user inputs, whether they be responses to prompts or letters for substituting
-def input_check(prompt, sec=False, responses=None, letter=False):
+def input_check(prompt, sec=False, responses=None, letter=False, revert=False):
     if responses is None:  # If a letter is being substituted, a list of responses is unneeded
         responses = []
 
     if letter is True:  # Checks letters in cryptogram for replacing
-        string = input(prompt).upper()
+        if revert is False:  # If there's no reverting, a substituted letter is needed
+            string = input(prompt).upper()
+        else:
+            string = alphaold[0]  # The string can be anything that passes upcoming checks
         if string.isalpha() is False:  # String is not a letter
             print("Please pick a letter from A-Z.")
             return input_check(prompt, letter=True, sec=sec)
@@ -55,8 +58,8 @@ def input_check(prompt, sec=False, responses=None, letter=False):
                 # Asks the user if they want to change the changed or unchanged string
                 return [string,
                         input_check(f"\nWould you like to replace the changed {string} or the unchanged "
-                                    f"{string}? [changed/unchanged] ", responses=["changed", "unchanged"])
-                        == 'changed']
+                                    f"{string}? [Changed/Unchanged/C/U] ", responses=["changed", "unchanged", "c", "u"])
+                        in ['changed', 'c']]
             # The letter is only present in changed form, so no user input is required
             elif difference[0] is True:
                 return [string, True]
@@ -64,7 +67,7 @@ def input_check(prompt, sec=False, responses=None, letter=False):
             return [string, False]
 
         elif sec is True:  # If this is the letter for replacing
-            if string == alphaold[0]:  # The letter is replacing itself
+            if revert is False and string == alphaold[0]:  # The letter is replacing itself
                 print("You cannot substitute a letter with itself.")
                 return input_check(f"\nWhat letter do you want to replace {alphaold[0]} with? ",
                                    sec=True, letter=True)
@@ -78,20 +81,24 @@ def input_check(prompt, sec=False, responses=None, letter=False):
                 elif alphaold == cryptogram[i]:
                     if data[1][i] == string:  # If the original letter equals the letter for replacing
                         og = True
+            if revert is True:
+                return[data[1][substituted[1]], True]  # Return the original letter and that it's an original
             # The letter for replacing is substituted and it's not meant to be an original
             if og is False and substituted[0] is True:
                 print(f"{string} is already substituted. Please undo '{string}' to '{data[1][substituted[1]]}' "
                       "or substitute a different letter.")  # Tells the user how to undo the substituted letter
                 return input_check(f"\nWhat letter do you want to replace {alphaold[0]} with? ",
                                    sec=True, letter=True)
-            return [string, og]
+            else:
+                return [string, og]
 
     else:  # Regular input checker
         rawinput = input(prompt).rstrip().lower()
         for response in responses:
             if rawinput == response:  # The user put an accepted response
                 return response
-        print('Please respond with {}.'.format(' or '.join(responses)))  # The user didn't put an accepted response
+        # The user didn't put an accepted response
+        print("Please respond with {}.". format(' or '.join(map(lambda x: f'"{x}"', responses))))
         return input_check(prompt, responses=responses)  # Re-prompt them
 
 
@@ -141,20 +148,20 @@ def setup(dir):
         data.append(data[0])  # Makes a copy of the unchanged data for later use
     else:  # The program has been run before
         # Prompts the user if they'd like to continue where they left off or start over
-        if input_check("\nWould you like to continue where you left off or start over? [left off/start over] ",
+        if input_check("\nWould you like to continue where you left off or start over? [Left off/Start over] ",
                        responses=["left off", "start over"]) == 'start over':
 
             # They can clear the current cryptogram, or make a new one
-            action = input_check("\nWould you like to work on a new cryptogram or clear your current one? [new/clear] ",
+            action = input_check("\nWould you like to work on a new cryptogram or clear your current one? [New/Clear] ",
                                  responses=["new", "clear"])
 
             # Extra confirmation check
-            if 'y' in input_check("\nAre you sure? Your progress will be deleted and this can't be undone.[Y/N] ",
+            if 'y' in input_check("\nAre you sure? Your progress will be deleted and this can't be undone. [Y/N] ",
                                   responses=["yes", "no", 'y', 'n']):
-                # If the user would like to start over, delete the save file and call setup
+                # If the user would like to start over, delete the save file and return false
                 if action == "new":
                     os.remove(dir)
-                    setup(dir)
+                    return False
                 else:  # The user would like to clear their changes
                     data[0] = data[1]  # Set the changed cryptogram equal to the unchanged one
     print()
@@ -164,6 +171,9 @@ def setup(dir):
 colorama.init()
 dir = os.path.dirname(os.path.realpath(__file__)) + "\input.txt"  # Path to save file
 data = setup(dir)  # Sets up program
+while data is False:  # Calls setup until a new cryptogram is entered
+    data = setup(dir)
+
 cryptogram = []  # Will store the user changed cryptogram
 
 # Finds differences between changed and unchanged cryptograms and notates the changed letters
@@ -178,9 +188,19 @@ print()
 
 while True:
     alphaold = input_check("\nWhat letter do you want to replace? ", letter=True)
-    alphanew = input_check(f"\nWhat letter do you want to replace {alphaold[0]} with? ", sec=True, letter=True)
+    rev = False
+    alphanew = []
+    if alphaold[1] is True:
+        if input_check(f"\nWould you like to revert {alphaold[0]} to its original letter?[Y/N] ",
+                          responses=["yes", "no", 'y', 'n']) in ["y", "yes"]:
+            alphanew = input_check("\n", sec=True, letter=True, revert=True)
+            rev = True
+    if rev is False:
+        alphanew = input_check(f"\nWhat letter do you want to replace {alphaold[0]} with? ", sec=True, letter=True)
+
     # Replaces letters, notating if old one is the changed version or not and if the new one is an original
     replacer(alphaold[0], alphanew[0], changed=alphaold[1], red=not alphanew[1])
+
     # Gives the user an option to undo their change
     undo = input_check("\nDo you want to undo?[Y/N] ", responses=["yes", "no", 'y', 'n'])
     if 'y' in undo:
