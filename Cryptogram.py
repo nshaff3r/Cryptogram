@@ -1,6 +1,8 @@
 import os
 import colorama
+from shutil import copyfile
 from termcolor import colored
+from datetime import datetime
 
 
 # Replaces letters in cryptogram and records if they should be considered changed or not
@@ -158,7 +160,12 @@ def setup(dir):
             # Extra confirmation check
             if 'y' in input_check("\nAre you sure? Your progress will be deleted and this can't be undone. [Y/N] ",
                                   responses=["yes", "no", 'y', 'n']):
-                # If the user would like to start over, delete the save file and return false
+                timestamp = datetime.now().strftime("/%m-%d-%Y-%H.%M.%S")
+                os.makedirs(os.path.dirname(os.path.realpath(__file__)) + "/archive", exist_ok=True)
+                copyfile(dir, os.path.dirname(os.path.realpath(__file__)) + "/archive" + timestamp + ".txt")
+                print("A copy of the save file has been created as a precautionary measure in your current directory.")
+                print(os.path.dirname(os.path.realpath(__file__)) + "/archive" + timestamp)
+            # If the user would like to start over, delete the save file and return false
                 if action == "new":
                     os.remove(dir)
                     return False
@@ -169,7 +176,7 @@ def setup(dir):
 
 
 colorama.init()
-dir = os.path.dirname(os.path.realpath(__file__)) + "\input.txt"  # Path to save file
+dir = os.path.dirname(os.path.realpath(__file__)) + "/input.txt"  # Path to save file
 data = setup(dir)  # Sets up program
 while data is False:  # Calls setup until a new cryptogram is entered
     data = setup(dir)
@@ -201,23 +208,24 @@ while True:
     # Replaces letters, notating if old one is the changed version or not and if the new one is an original
     replacer(alphaold[0], alphanew[0], changed=alphaold[1], red=not alphanew[1])
 
-    # Gives the user an option to undo their change
-    undo = input_check("\nDo you want to undo?[Y/N] ", responses=["yes", "no", 'y', 'n'])
-    if 'y' in undo:
+    # Gives the user an option to undo their change, continue, or exit the program
+    action = input_check("\nDone, undo, or continue?[D/U/C] ", responses=["done", "undo", "continue", "d", "u", "c"])
+    if action in ["u", "undo"]:
         # Reverses the first replacement, retaining if the original letter was changed
         # and noting that, unless the new letter is an original, it must be changed
         replacer(alphanew[0], alphaold[0], changed=not alphanew[1], red=alphaold[1])
 
-    # Gives the user the option to end the program
-    done = input_check("\nAre you done?[Y/N] ", responses=["yes", "no", 'y', 'n'])
-    if 'y' in done:
+    if action in ["d", "done"]:
         completed = True
         for i in range(len(cryptogram)):
             if cryptogram[i][0].isalpha() is True:
                 if cryptogram[i][1] is False:
                     completed = False
         if completed is True:
-            print(colored("Congrats on finishing!!", "green"))
+            for i in range(len(cryptogram)):
+                print(colored(cryptogram[i][0], "green"), end='')
+            print()
+            print(colored("Congrats on finishing!!", "blue"))
         else:
             print("\nSee you next time :-)")
         break
